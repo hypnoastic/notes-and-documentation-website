@@ -9,6 +9,8 @@ import l3 from './pageAssets/l3.png';
 import l4 from './pageAssets/l4.png';
 import left from './pageAssets/left.png';
 import right from './pageAssets/right.png';
+import info from './pageAssets/info.png';
+import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
     const scrollToSection = (sectionId) => {
@@ -21,18 +23,22 @@ const LandingPage = () => {
     return (
         <div className="container">
             {/* Navbar */}
+
             <div className="navbar">
                 <div className="navbar-left">
                     <div className="logo">पन्ने</div>
                     <ul className="nav-links">
                         <li onClick={() => scrollToSection('features')}>Features</li>
                         <li onClick={() => scrollToSection('about-us')}>About Us</li>
-                        <li onClick={() => scrollToSection('contact-us')}>Contact</li>
                     </ul>
                 </div>
                 <div className="nav-buttons">
-                    <button className="login-btn">Login</button>
-                    <button className="get-started-btn">Get Started</button>
+                    <Link to="/login">
+                        <button className="login-btn">Login</button>
+                    </Link>
+                    <Link to="/signup">
+                        <button className="get-started-btn">Get Started</button>
+                    </Link>
                 </div>
             </div>
 
@@ -44,20 +50,20 @@ const LandingPage = () => {
             </section>
 
 
-            {/* Horizontal Feature Section */}
-            <section className="horizontal-features">
-                <div className="scroll-wrapper">
-                    <div className="scroll-container">
-                        <div className="scroll-card">
+            {/* Cards Section */}
+            <section className="cards">
+                <div className="wrapper">
+                    <div className="wrapper-container">
+                        <div className="card">
                             <img src={docs} alt="Docs" />
                         </div>
-                        <div className="scroll-card">
+                        <div className="card">
                             <img src={classNotes} alt="Class Notes" />
                         </div>
-                        <div className="scroll-card">
+                        <div className="card">
                             <img src={journal} alt="Journal" />
                         </div>
-                        <div className="scroll-card">
+                        <div className="card">
                             <img src={thoughts} alt="Thoughts" />
                         </div>
                     </div>
@@ -65,7 +71,16 @@ const LandingPage = () => {
             </section>
 
 
-
+            {/* info Section */}
+            <section className="info-section">
+                <div className="info-content">
+                    <h1>Work . School . Life</h1>
+                    <h1>Remember Everything</h1>
+                </div>
+                <div className="info-image-container">
+                    <img src={info} alt="Organize with Panne" className="info-image" />
+                </div>
+            </section>
 
             {/* Features Section */}
             <section id="features" className="features">
@@ -106,18 +121,6 @@ const LandingPage = () => {
                     </div>
 
                     <img src={left} alt="Right visual" className="about-us-image" />
-                </div>
-            </section>
-
-
-            {/* Contact Us Section */}
-            <section id="contact-us" className="contact-us">
-                <h2>Contact Us</h2>
-                <div className="contact-form">
-                    <input type="text" placeholder="Name" className="form-input" />
-                    <input type="email" placeholder="Email" className="form-input" />
-                    <textarea placeholder="Message" className="form-textarea"></textarea>
-                    <button className="submit-btn">Send Message</button>
                 </div>
             </section>
 

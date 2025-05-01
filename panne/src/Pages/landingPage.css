@@ -13,9 +13,9 @@ body {
 
 /* UNIFIED HEADING STYLES FOR SELECTED HEADINGS ONLY */
 h1, h2, h3, h4 {
-    font-size: 2rem; /* Adjust the size as needed */
-    color: #333; /* Consistent color */
-    margin-bottom: 20px;
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 1.25rem;
 }
 
 /* CONTAINER */
@@ -30,7 +30,8 @@ h1, h2, h3, h4 {
     top: 0;
     left: 0;
     width: 100%;
-    padding: 10px 100px;
+    padding: 0.625rem 2rem;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -38,16 +39,17 @@ h1, h2, h3, h4 {
     border-bottom: 1px solid #000;
     backdrop-filter: blur(10px);
     z-index: 1000;
+    box-sizing: border-box;     /* Prevents overflow from padding */
 }
 
 .navbar-left {
     display: flex;
     align-items: center;
-    gap: 100px;
+    gap: 6.25rem;
 }
 
 .logo {
-    font-size: 40px;
+    font-size: 2.5rem;
     font-weight: bold;
     color: #2dbe60;
 }
@@ -55,14 +57,14 @@ h1, h2, h3, h4 {
 .nav-links {
     display: flex;
     list-style: none;
-    gap: 25px;
+    gap: 1.5rem;
     padding: 0;
     margin: 0;
 }
 
 .nav-links li {
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1rem;
     color: #333;
 }
 
@@ -72,7 +74,7 @@ h1, h2, h3, h4 {
 
 .nav-buttons {
     display: flex;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 /* BUTTONS */
@@ -80,17 +82,17 @@ h1, h2, h3, h4 {
 .get-started-btn,
 .get-evernote-btn,
 .submit-btn {
-    padding: 8px 20px;
-    font-size: 16px;
+    padding: 0.5rem 1.25rem;
+    font-size: 1rem;
     border: 1px solid #000;
-    border-radius: 5px;
+    border-radius: 0.3125rem;
     cursor: pointer;
     transition: transform 0.2s ease;
 }
 
 .get-evernote-btn {
-    padding: 12px 30px;
-    font-size: 18px;
+    padding: 0.75rem 1.875rem;
+    font-size: 1.125rem;
     background-color: #2dbe60;
     color: #fff;
 }
@@ -118,53 +120,55 @@ button:hover,
 /* HERO SECTION */
 .hero {
     text-align: center;
-    padding: 250px 20px 50px;
+    padding: 10.625rem 1.25rem 1.125rem;
 }
 
 .hero h1 {
-    font-size: 65px;
-    margin-bottom: 20px;
+    font-size: 4.0625rem;
+    margin-bottom: 1.25rem;
     color: #050505;
 }
 
 .hero p {
     font-size: 1.2rem;
-    margin-bottom: 30px;
+    margin-bottom: 1.875rem;
     color: #666;
 }
+
 .highlight-green {
-    color: #2dbe60; /* Green color */
+    color: #2dbe60;
 }
 
 .login-link {
     display: block;
-    margin-top: 15px;
+    margin-top: 0.9375rem;
     color: #2dbe60;
     text-decoration: none;
 }
 
 /* HORIZONTAL FEATURE SECTION */
-.horizontal-features {
-    padding: 40px 60px;
+.cards {
+    margin: 4rem 0;
+    padding: 2.5rem 3.75rem;
 }
 
-.scroll-wrapper {
+.wrapper {
     display: flex;
     justify-content: center;
 }
 
-.scroll-container {
+.wrapper-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 30px;
+    gap: 1.875rem;
     justify-content: center;
 }
 
-.scroll-card {
-    width: 305px;
-    height: 330px;
+.card {
+    width: 19.0625rem;
+    height: 20.625rem;
     background: white;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     border: 1px solid #000;
     display: flex;
     align-items: center;
@@ -172,21 +176,54 @@ button:hover,
     transition: transform 0.2s ease;
 }
 
-.scroll-card img {
+.card img {
     max-width: 100%;
     max-height: 100%;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     object-fit: cover;
 }
 
-.scroll-card:hover {
+.card:hover {
     transform: translateY(-4px);
     box-shadow: 5px 5px 0 rgba(0, 0, 0, 1);
 }
 
+/* INFO SECTION */
+.info-section {
+    margin:4rem 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 3.75rem;
+    flex-wrap: wrap;
+}
+
+.info-content {
+    flex: 1;
+    max-width: 50%;
+}
+
+.info-content h1 {
+    font-size: 4rem;
+    margin: 0 0 1.25rem;
+}
+
+.info-image-container {
+    flex: 1;
+    max-width: 45%;
+    text-align: right;
+}
+
+.info-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+}
+
 /* FEATURES SECTION */
 .features {
-    padding: 50px 60px;
+    padding: 3.125rem 3.75rem;
 }
 
 .feature-cards {
@@ -194,25 +231,25 @@ button:hover,
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 .feature-card {
     flex: 1;
-    min-width: 250px;
-    margin: 0 10px;
-    padding: 25px;
-    border-radius: 10px;
+    min-width: 15.625rem;
+    margin: 0 0.625rem;
+    padding: 1.5625rem;
+    border-radius: 0.625rem;
     text-align: center;
     cursor: pointer;
 }
 
 .feature-card img {
-    width: 120px;
+    width: 7.5rem;
 }
 
 .feature-card h3 {
-    margin-bottom: 15px;
+    margin-bottom: 0.9375rem;
     font-size: 1.5rem;
 }
 
@@ -221,36 +258,35 @@ button:hover,
     color: #444;
 }
 
-/* ABOUT US SECTION (stretches edge to edge with images on sides) */
+/* ABOUT US SECTION */
 .about-us-section {
-    margin: 50px 0;
-    padding: 60px 0;
+    margin: 7rem 0;
 }
 
 .about-us-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 40px;
+    gap: 2.5rem;
     flex-wrap: wrap;
     box-sizing: border-box;
 }
 
 .about-us-image {
-    width: 250px;
+    width: 15.625rem;
     height: auto;
     object-fit: contain;
 }
 
 .about-us-content {
     flex: 1;
-    max-width: 600px;
+    max-width: 37.5rem;
     text-align: center;
 }
 
 .about-us-content h2 {
     font-size: 2.5rem;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
     color: #333;
 }
 
@@ -260,67 +296,31 @@ button:hover,
     color: #555;
 }
 
-/* CONTACT SECTION */
-.contact-us {
-    padding: 50px 20px;
-    text-align: center;
-}
-
-.contact-us h2 {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    color: #333;
-}
-
-.contact-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.form-input,
-.form-textarea {
-    padding: 10px;
-    border: 1px solid #000;
-    border-radius: 5px;
-    font-size: 16px;
-    background-color: rgba(255, 255, 255, 0.85);
-    box-sizing: border-box;
-}
-
-.form-textarea {
-    height: 100px;
-    resize: none;
-}
-
 /* FOOTER */
 .footer {
     width: 100%;
     border-top: 1px solid #000;
-    padding: 40px 20px 20px;
+    padding: 2.5rem 1.25rem 1.25rem;
     box-sizing: border-box;
     color: #222;
     text-align: center;
 }
 
 .footer-section h4 {
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 1.125rem;
+    margin-bottom: 0.625rem;
     color: #333;
 }
 
 .footer-section p {
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.6;
     color: #555;
     margin: 0;
 }
 
 .footer-bottom {
-    margin-top: 20px;
-    font-size: 14px;
+    margin-top: 1.25rem;
+    font-size: 0.875rem;
     color: #666;
 }
-
