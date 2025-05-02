@@ -1,3 +1,14 @@
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .login-page {
     display: flex;
     justify-content: space-around;
@@ -16,6 +27,11 @@
     background-color: #faf6f3;
     border: 1px black solid;
     border-radius: 1rem;
+
+    /* Animation */
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: 0.2s;
+    opacity: 0;
 }
 
 .login-left h1 {
@@ -25,13 +41,14 @@
     margin: 0;
     color: #2dbe60;
 }
-.login-left h2{
+
+.login-left h2 {
     text-align: center;
     font-size: 2rem;
     margin: 0;
 }
 
-.login-left p{
+.login-left p {
     text-align: center;
     font-size: 1rem;
     font-weight: lighter;
@@ -74,6 +91,13 @@
     box-shadow: 5px 5px 0 rgba(0, 0, 0, 1);
 }
 
+.auth-login-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .switch-text {
     padding-top: 0.75rem;
     margin-top: 1rem;
@@ -87,6 +111,7 @@
     font-weight: bold;
     transition: color 0.3s ease;
 }
+
 .switch-text a:hover {
     color: #2727ff;
 }
@@ -94,6 +119,11 @@
 .login-right {
     flex: 1;
     text-align: center;
+
+    /* Animation */
+    animation: fadeInUp 1s ease forwards;
+    animation-delay: 0.4s;
+    opacity: 0;
 }
 
 .login-right img {
@@ -105,4 +135,15 @@
     margin-top: 1rem;
     font-size: 4rem;
     color: #555;
+}
+
+.error-message {
+    color: #e74c3c;
+    background-color: #fadbd8;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 500;
+    border: 1px solid #e74c3c;
 }

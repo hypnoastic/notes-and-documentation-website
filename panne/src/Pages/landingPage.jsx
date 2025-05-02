@@ -10,14 +10,20 @@ import l4 from './pageAssets/l4.png';
 import left from './pageAssets/left.png';
 import right from './pageAssets/right.png';
 import info from './pageAssets/info.png';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
+    const navigate = useNavigate();
+    
     const scrollToSection = (sectionId) => {
         const section = document.getElementById(sectionId);
         if (section) {
             section.scrollIntoView({ behavior: 'smooth' });
         }
+    };
+
+    const handleGetStarted = () => {
+        navigate('/signup');
     };
 
     return (
@@ -44,9 +50,9 @@ const LandingPage = () => {
 
             {/* Hero Section */}
             <section className="hero">
-                <h1>What will you <span className="highlight-green">achieve</span> today?</h1>
+                <h1>What will you <span className="highlight-green">Achieve</span> today?</h1>
                 <p>Remember everything and tackle any project with your notes, tasks, and schedule all in one place.</p>
-                <button className="get-evernote-btn">Get Started</button>
+                <button className="get-evernote-btn" onClick={handleGetStarted}>Get Started</button>
             </section>
 
 
