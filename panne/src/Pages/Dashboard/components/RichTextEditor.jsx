@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../../firebase';
+import CustomDropdown from './CustomDropdown';
 import './RichTextEditor.css';
 
 const RichTextEditor = ({ 
@@ -8,7 +9,8 @@ const RichTextEditor = ({
   selectedNotebook, 
   notebooks, 
   onSave, 
-  onClose 
+  onClose,
+  onTabChange
 }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -73,11 +75,18 @@ const RichTextEditor = ({
       img.src = downloadURL;
       img.className = 'editor-image';
       img.style.maxWidth = '100%';
+      img.alt = file.name.split('.')[0]; // Add alt text for accessibility
       
       const selection = window.getSelection();
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         range.insertNode(img);
+        
+        // Move cursor after the image
+        range.setStartAfter(img);
+        range.setEndAfter(img);
+        selection.removeAllRanges();
+        selection.addRange(range);
       } else {
         editorRef.current.appendChild(img);
       }
@@ -90,6 +99,8 @@ const RichTextEditor = ({
       alert('Failed to upload image. Please try again.');
     } finally {
       setUploading(false);
+      // Clear the file input so the same file can be selected again if needed
+      e.target.value = '';
     }
   };
   
@@ -142,11 +153,23 @@ const RichTextEditor = ({
     }
   }, [content]);
 
+  // Handle navigation to other tabs
+  const handleNavigate = (tab) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
   return (
     <div className="rich-text-editor">
       <div className="editor-header">
         <h2>{note ? 'Edit Note' : 'Create New Note'}</h2>
-        <button className="close-btn" onClick={onClose}>×</button>
+        <div className="editor-nav-buttons">
+          <button type="button" className="editor-nav-btn" onClick={() => handleNavigate('home')}>Home</button>
+          <button type="button" className="editor-nav-btn" onClick={() => handleNavigate('notes')}>Notes</button>
+          <button type="button" className="editor-nav-btn" onClick={() => handleNavigate('notebooks')}>Notebooks</button>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
       </div>
       
       <form onSubmit={handleSubmit}>
@@ -162,93 +185,118 @@ const RichTextEditor = ({
         </div>
         
         <div className="form-group notebook-selector">
-          <label htmlFor="notebook-select">Select Notebook:</label>
-          <select 
-            id="notebook-select" 
-            value={notebookId} 
-            onChange={(e) => setNotebookId(e.target.value)}
-            required
-          >
-            <option value="">Select a notebook</option>
-            {notebooks && notebooks.map(notebook => (
-              <option key={notebook.id} value={notebook.id}>
-                {notebook.name}
-              </option>
-            ))}
-          </select>
+          <CustomDropdown
+            label="Select Notebook:"
+            options={notebooks.map(notebook => ({
+              value: notebook.id,
+              label: notebook.name
+            }))}
+            value={notebookId}
+            onChange={(value) => setNotebookId(value)}
+            placeholder="Select a notebook"
+            required={true}
+          />
         </div>
         
         <div className="editor-toolbar">
           <div className="toolbar-group">
-            <button type="button" onClick={() => formatDoc('bold')} title="Bold">
-              <strong>B</strong>
+            <button type="button" onClick={() => formatDoc('bold')} title="Bold" className="toolbar-btn">
+              <span className="toolbar-btn-label">B</span>
+              <span className="toolbar-tooltip">Bold</span>
             </button>
-            <button type="button" onClick={() => formatDoc('italic')} title="Italic">
-              <em>I</em>
+            <button type="button" onClick={() => formatDoc('italic')} title="Italic" className="toolbar-btn">
+              <span className="toolbar-btn-label"><em>I</em></span>
+              <span className="toolbar-tooltip">Italic</span>
             </button>
-            <button type="button" onClick={() => formatDoc('underline')} title="Underline">
-              <u>U</u>
+            <button type="button" onClick={() => formatDoc('underline')} title="Underline" className="toolbar-btn">
+              <span className="toolbar-btn-label"><u>U</u></span>
+              <span className="toolbar-tooltip">Underline</span>
             </button>
           </div>
           
           <div className="toolbar-group">
-            <select onChange={(e) => formatDoc('formatBlock', e.target.value)}>
-              <option value="">Format</option>
-              <option value="h1">Heading 1</option>
-              <option value="h2">Heading 2</option>
-              <option value="h3">Heading 3</option>
-              <option value="p">Paragraph</option>
-            </select>
+            <div className="toolbar-dropdown">
+              <span className="toolbar-label">Format:</span>
+              <CustomDropdown
+                options={[
+                  { value: '', label: 'Format' },
+                  { value: 'h1', label: 'Heading 1' },
+                  { value: 'h2', label: 'Heading 2' },
+                  { value: 'h3', label: 'Heading 3' },
+                  { value: 'p', label: 'Paragraph' }
+                ]}
+                onChange={(value) => value && formatDoc('formatBlock', value)}
+                placeholder="Format"
+              />
+            </div>
             
-            <select onChange={(e) => formatDoc('fontSize', e.target.value)}>
-              <option value="">Font Size</option>
-              <option value="1">Very Small</option>
-              <option value="2">Small</option>
-              <option value="3">Normal</option>
-              <option value="4">Medium Large</option>
-              <option value="5">Large</option>
-              <option value="6">Very Large</option>
-              <option value="7">Maximum</option>
-            </select>
+            <div className="toolbar-dropdown">
+              <span className="toolbar-label">Size:</span>
+              <CustomDropdown
+                options={[
+                  { value: '', label: 'Font Size' },
+                  { value: '1', label: 'Very Small' },
+                  { value: '2', label: 'Small' },
+                  { value: '3', label: 'Normal' },
+                  { value: '4', label: 'Medium Large' },
+                  { value: '5', label: 'Large' },
+                  { value: '6', label: 'Very Large' },
+                  { value: '7', label: 'Maximum' }
+                ]}
+                onChange={(value) => value && formatDoc('fontSize', value)}
+                placeholder="Font Size"
+              />
+            </div>
           </div>
           
           <div className="toolbar-group">
-            <input 
-              type="color" 
-              onChange={(e) => formatDoc('foreColor', e.target.value)} 
-              title="Text Color" 
-            />
-            <input 
-              type="color" 
-              onChange={(e) => formatDoc('hiliteColor', e.target.value)} 
-              title="Background Color" 
-            />
+            <div className="color-picker">
+              <span className="toolbar-label">Text:</span>
+              <input 
+                type="color" 
+                onChange={(e) => formatDoc('foreColor', e.target.value)} 
+                title="Text Color" 
+              />
+            </div>
+            <div className="color-picker">
+              <span className="toolbar-label">Highlight:</span>
+              <input 
+                type="color" 
+                onChange={(e) => formatDoc('hiliteColor', e.target.value)} 
+                title="Background Color" 
+              />
+            </div>
           </div>
           
           <div className="toolbar-group">
-            <button type="button" onClick={() => formatDoc('justifyLeft')} title="Align Left">
-              ⟵
+            <button type="button" onClick={() => formatDoc('justifyLeft')} title="Align Left" className="toolbar-btn">
+              <span className="toolbar-btn-label">⟵</span>
+              <span className="toolbar-tooltip">Align Left</span>
             </button>
-            <button type="button" onClick={() => formatDoc('justifyCenter')} title="Align Center">
-              ⟷
+            <button type="button" onClick={() => formatDoc('justifyCenter')} title="Align Center" className="toolbar-btn">
+              <span className="toolbar-btn-label">⟷</span>
+              <span className="toolbar-tooltip">Align Center</span>
             </button>
-            <button type="button" onClick={() => formatDoc('justifyRight')} title="Align Right">
-              ⟶
+            <button type="button" onClick={() => formatDoc('justifyRight')} title="Align Right" className="toolbar-btn">
+              <span className="toolbar-btn-label">⟶</span>
+              <span className="toolbar-tooltip">Align Right</span>
             </button>
           </div>
           
           <div className="toolbar-group">
-            <button type="button" onClick={() => formatDoc('insertUnorderedList')} title="Bullet List">
-              • List
+            <button type="button" onClick={() => formatDoc('insertUnorderedList')} title="Bullet List" className="toolbar-btn">
+              <span className="toolbar-btn-label">• List</span>
+              <span className="toolbar-tooltip">Bullet List</span>
             </button>
-            <button type="button" onClick={() => formatDoc('insertOrderedList')} title="Numbered List">
-              1. List
+            <button type="button" onClick={() => formatDoc('insertOrderedList')} title="Numbered List" className="toolbar-btn">
+              <span className="toolbar-btn-label">1. List</span>
+              <span className="toolbar-tooltip">Numbered List</span>
             </button>
           </div>
           
           <div className="toolbar-group">
             <label className="image-upload-btn">
-              {uploading ? 'Uploading...' : '📷 Image'}
+              {uploading ? 'Uploading...' : '📷 Insert Image'}
               <input 
                 type="file" 
                 accept="image/*" 

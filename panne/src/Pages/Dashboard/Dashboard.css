@@ -2,6 +2,14 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.dashboard-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .dashboard-container {
@@ -13,7 +21,6 @@
 .main-content {
   flex: 1;
   overflow-y: auto;
-  background-color: #ffffff;
 }
 
 .loading {
@@ -23,6 +30,16 @@
   height: 100vh;
   font-size: 1.5rem;
   color: #2dbe60;
+}
+
+.initial-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.5rem;
+  color: #2dbe60;
+  background-color: #faf6f3;
 }
 
 /* Responsive adjustments */

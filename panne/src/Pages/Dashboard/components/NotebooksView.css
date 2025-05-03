@@ -74,10 +74,12 @@
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .notebook-item:hover {
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
 }
 
 .notebook-header {
@@ -166,6 +168,7 @@
   display: flex;
   flex-direction: column;
   height: 180px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .note-card:hover {

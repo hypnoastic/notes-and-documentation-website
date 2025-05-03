@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CustomDropdown from './CustomDropdown';
 import './NotesView.css';
 
 const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
@@ -63,30 +64,31 @@ const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
         
         <div className="filter-options">
           <div className="filter-group">
-            <label>Notebook:</label>
-            <select 
-              value={selectedNotebook} 
-              onChange={(e) => setSelectedNotebook(e.target.value)}
-            >
-              <option value="all">All Notebooks</option>
-              {notebooks.map(notebook => (
-                <option key={notebook.id} value={notebook.id}>
-                  {notebook.name}
-                </option>
-              ))}
-            </select>
+            <CustomDropdown
+              label="Notebook:"
+              options={[
+                { value: 'all', label: 'All Notebooks' },
+                ...notebooks.map(notebook => ({
+                  value: notebook.id,
+                  label: notebook.name
+                }))
+              ]}
+              value={selectedNotebook}
+              onChange={(value) => setSelectedNotebook(value)}
+            />
           </div>
           
           <div className="filter-group">
-            <label>Sort by:</label>
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="updatedAt">Last Updated</option>
-              <option value="createdAt">Date Created</option>
-              <option value="title">Title</option>
-            </select>
+            <CustomDropdown
+              label="Sort by:"
+              options={[
+                { value: 'updatedAt', label: 'Last Updated' },
+                { value: 'createdAt', label: 'Date Created' },
+                { value: 'title', label: 'Title' }
+              ]}
+              value={sortBy}
+              onChange={(value) => setSortBy(value)}
+            />
           </div>
         </div>
       </div>

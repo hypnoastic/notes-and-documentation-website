@@ -13,7 +13,8 @@ import {
   doc,
   getDoc,
   serverTimestamp,
-  limit
+  limit,
+  onSnapshot
 } from 'firebase/firestore';
 import './Dashboard.css';
 
@@ -35,14 +36,17 @@ const Dashboard = () => {
   const [notebooks, setNotebooks] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [selectedNotebook, setSelectedNotebook] = useState(null);
+  const [dashboardVisible, setDashboardVisible] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    // Listen for auth state changes
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        fetchNotebooks(currentUser.uid);
-        fetchNotes(currentUser.uid);
+        // We'll set up Firestore listeners instead of one-time fetches
+        setupNotebooksListener(currentUser.uid);
+        setupNotesListener(currentUser.uid);
       } else {
         // Redirect to login if not authenticated
         navigate('/login');
@@ -50,25 +54,38 @@ const Dashboard = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Add animation effect when dashboard loads
+    setTimeout(() => {
+      setDashboardVisible(true);
+    }, 100);
+
+    return () => {
+      unsubscribeAuth();
+      // Clean up Firestore listeners if they exist
+      if (window.unsubscribeNotebooks) window.unsubscribeNotebooks();
+      if (window.unsubscribeNotes) window.unsubscribeNotes();
+    };
   }, [navigate]);
 
-  const fetchNotebooks = async (userId) => {
-    try {
-      const notebooksRef = collection(db, 'notebooks');
-      const q = query(
-        notebooksRef,
-        where('userId', '==', userId),
-        orderBy('updatedAt', 'desc')
-      );
+  const setupNotebooksListener = (userId) => {
+    const notebooksRef = collection(db, 'notebooks');
+    const q = query(
+      notebooksRef,
+      where('userId', '==', userId),
+      orderBy('updatedAt', 'desc')
+    );
 
-      const querySnapshot = await getDocs(q);
+    // Set up real-time listener for notebooks
+    window.unsubscribeNotebooks = onSnapshot(q, (querySnapshot) => {
       const fetchedNotebooks = [];
 
       querySnapshot.forEach((doc) => {
         fetchedNotebooks.push({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          // Convert Firestore timestamps to JS Date objects for easier handling
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date()
         });
       });
 
@@ -78,9 +95,9 @@ const Dashboard = () => {
       if (fetchedNotebooks.length === 0) {
         createDefaultNotebook(userId);
       }
-    } catch (error) {
-      console.error('Error fetching notebooks:', error);
-    }
+    }, (error) => {
+      console.error('Error listening to notebooks:', error);
+    });
   };
 
   const createDefaultNotebook = async (userId) => {
@@ -112,22 +129,25 @@ const Dashboard = () => {
     }
   };
 
-  const fetchNotes = async (userId) => {
-    try {
-      const notesRef = collection(db, 'notes');
-      const q = query(
-        notesRef,
-        where('userId', '==', userId),
-        orderBy('updatedAt', 'desc')
-      );
+  const setupNotesListener = (userId) => {
+    const notesRef = collection(db, 'notes');
+    const q = query(
+      notesRef,
+      where('userId', '==', userId),
+      orderBy('updatedAt', 'desc')
+    );
 
-      const querySnapshot = await getDocs(q);
+    // Set up real-time listener for notes
+    window.unsubscribeNotes = onSnapshot(q, async (querySnapshot) => {
       const fetchedNotes = [];
 
       querySnapshot.forEach((doc) => {
         fetchedNotes.push({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          // Convert Firestore timestamps to JS Date objects for easier handling
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date()
         });
       });
 
@@ -155,16 +175,13 @@ const Dashboard = () => {
 
       setNotes(notesWithNotebookDetails);
 
-      // If no notes exist, create a welcome note
-      if (fetchedNotes.length === 0) {
-        const defaultNotebook = notebooks.length > 0 ? notebooks[0] : await createDefaultNotebook(userId);
-        if (defaultNotebook) {
-          createWelcomeNote(userId, defaultNotebook.id, defaultNotebook.name);
-        }
+      // If no notes exist and we have notebooks, create a welcome note
+      if (fetchedNotes.length === 0 && notebooks.length > 0) {
+        createWelcomeNote(userId, notebooks[0].id, notebooks[0].name);
       }
-    } catch (error) {
-      console.error('Error fetching notes:', error);
-    }
+    }, (error) => {
+      console.error('Error listening to notes:', error);
+    });
   };
 
   const createWelcomeNote = async (userId, notebookId, notebookName) => {
@@ -365,6 +382,13 @@ const Dashboard = () => {
     setShowEditor(false);
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (showEditor) {
+      setShowEditor(false);
+    }
+  };
+
   const getRecentNotes = () => {
     return notes.slice(0, 3);
   };
@@ -378,14 +402,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard">
+    <div className={`dashboard ${dashboardVisible ? 'dashboard-visible' : ''}`}>
       <div className="dashboard-container">
         <Sidebar
           user={user}
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           onCreateNote={handleCreateNote}
           onCreateNotebook={handleCreateNotebook}
+          showEditor={showEditor}
         />
 
         <div className="main-content">
@@ -396,6 +421,7 @@ const Dashboard = () => {
               notebooks={notebooks}
               onSave={handleSaveNote}
               onClose={handleCloseEditor}
+              onTabChange={handleTabChange}
             />
           ) : (
             <>

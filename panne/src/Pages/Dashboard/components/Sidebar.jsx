@@ -8,7 +8,8 @@ const Sidebar = ({
   activeTab, 
   setActiveTab, 
   onCreateNote, 
-  onCreateNotebook 
+  onCreateNotebook,
+  showEditor
 }) => {
   const handleLogout = async () => {
     try {
@@ -16,6 +17,10 @@ const Sidebar = ({
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
   };
 
   return (
@@ -45,23 +50,20 @@ const Sidebar = ({
       <div className="sidebar-nav">
         <button 
           className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
+          onClick={() => handleTabChange('home')}
         >
-          <span className="nav-icon">🏠</span>
           <span className="nav-text">Home</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'notes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('notes')}
+          onClick={() => handleTabChange('notes')}
         >
-          <span className="nav-icon">📝</span>
           <span className="nav-text">Notes</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'notebooks' ? 'active' : ''}`}
-          onClick={() => setActiveTab('notebooks')}
+          onClick={() => handleTabChange('notebooks')}
         >
-          <span className="nav-icon">📚</span>
           <span className="nav-text">Notebooks</span>
         </button>
       </div>
@@ -69,7 +71,6 @@ const Sidebar = ({
       {/* Logout Button */}
       <div className="sidebar-footer">
         <button className="logout-btn" onClick={handleLogout}>
-          <span className="nav-icon">🚪</span>
           <span className="nav-text">Logout</span>
         </button>
       </div>
