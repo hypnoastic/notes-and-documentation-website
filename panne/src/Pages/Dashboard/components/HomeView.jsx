@@ -42,15 +42,6 @@ const HomeView = ({
                         onClick={() => onNoteClick(note)}
                     >
                       <h4>{note.title}</h4>
-                      <div className="item-content">
-                        {note.content && typeof note.content === 'string' && note.content.includes('<') ? (
-                            <div dangerouslySetInnerHTML={{
-                              __html: note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '')
-                            }} />
-                        ) : (
-                            <p>{note.content?.substring(0, 100)}{note.content?.length > 100 ? '...' : ''}</p>
-                        )}
-                      </div>
                       <div className="item-footer">
                   <span className="notebook-name">
                     {note.notebookName || 'Uncategorized'}

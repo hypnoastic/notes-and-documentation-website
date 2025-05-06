@@ -3,8 +3,7 @@ import './NotebooksView.css';
 
 const NotebooksView = ({ 
   notebooks, 
-  notes, 
-  onNotebookClick, 
+  notes,
   onNoteClick, 
   onCreateNotebook 
 }) => {
