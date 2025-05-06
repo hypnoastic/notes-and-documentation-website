@@ -50,7 +50,7 @@ const NotebooksView = ({
       <div className="notebooks-header">
         <h2>All Notebooks</h2>
         <button className="create-notebook-btn" onClick={onCreateNotebook}>
-          Create New Notebook
+          + Notebook
         </button>
       </div>
       

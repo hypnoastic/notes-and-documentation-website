@@ -1,3 +1,5 @@
+
+
 * {
   margin: 0;
   padding: 0;
@@ -16,19 +18,3 @@ html, body {
   height: 100%;
   text-align: center;
 }
-.loading-animation-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f5f5f5;
-  flex-direction: column;
-  text-align: center;
-}
-
-.loading-lottie {
-  width: 200px;
-  height: 200px;
-  margin-bottom: 20px;
-}
-

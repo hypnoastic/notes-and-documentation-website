@@ -108,7 +108,6 @@ h1, h2, h3, h4 {
     color: #333;
 }
 
-button:hover,
 .login-btn:hover,
 .get-started-btn:hover,
 .get-evernote-btn:hover,
@@ -323,4 +322,109 @@ button:hover,
     margin-top: 1.25rem;
     font-size: 0.875rem;
     color: #666;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+    /* Hide nav links */
+
+    .nav-links {
+        display: none;
+    }
+
+    /* Hero Section */
+    .hero h1 {
+        font-size: 2.5rem;
+        text-align: center;
+    }
+
+    .hero p {
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .get-evernote-btn {
+        font-size: 0.9rem;
+        padding: 0.6rem 1.2rem;
+    }
+
+    /* Cards Section */
+    .card img {
+        width: 90%;
+        height: auto;
+    }
+
+    /* Info Section */
+    .info-section {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .info-content h1 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-image-container {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .info-image {
+        width: 90%;
+        height: auto;
+    }
+
+    /* Feature Section */
+
+    .feature-card {
+        width: 90%;
+        padding: 1rem;
+    }
+
+    .feature-card img {
+        width: 100px;
+        height: auto;
+    }
+    .feature-card h3 {
+        font-size: 1.2rem;
+    }
+    .feature-card p {
+        font-size: 1rem;
+    }
+
+
+    /* About Us Section */
+    .about-us-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .about-us {
+        width: 100%;
+        height: auto;
+        margin: 1rem 0;
+    }
+    .about-us-image {
+        display: none;
+    }
+    .about-us-content h2 {
+        font-size: 1.4rem;
+    }
+
+    .about-us-content p {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    /* Footer */
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .footer-section {
+        margin-bottom: 1rem;
+    }
 }

@@ -45,8 +45,8 @@
 .search-bar input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid black;
+  border-radius: 10px;
   font-size: 0.9rem;
   outline: none;
   transition: border-color 0.3s;
@@ -70,16 +70,15 @@
 
 .notebook-item {
   background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid black;
+  border-radius: 10px;
   overflow: hidden;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .notebook-item:hover {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transform: translateY(-3px);
+  transform: translateY(-4px);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 1);
 }
 
 .notebook-header {
@@ -114,7 +113,8 @@
 }
 
 .note-count {
-  background-color: #e0e0e0;
+  background-color: white;
+  border: 1px solid black;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-weight: 500;
@@ -159,22 +159,20 @@
 }
 
 .note-card {
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  background-color: #faf6f3;
+  border: 1px solid black;
+  border-radius: 10px;
   padding: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   height: 180px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .note-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-color: #2dbe60;
+  transform: translateY(-4px);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 1);
 }
 
 .note-card h4 {
@@ -218,12 +216,16 @@
 }
 
 @media (max-width: 768px) {
+  .notebooks-view {
+    margin-left: 60px;
+  }
   .notebooks-header {
-    flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+  .create-notebook-btn{
+    display: none;
+  }
   .search-bar {
     max-width: 100%;
   }

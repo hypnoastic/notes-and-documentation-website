@@ -1,23 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './CustomDropdown.css';
 
-const CustomDropdown = ({ 
-  options, 
-  value, 
-  onChange, 
+const CustomDropdown = ({
+  options,
+  value,
+  onChange,
   placeholder = 'Select an option',
-  label = null,
-  required = false
+  label = null
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Find the selected option based on value
-  useEffect(() => {
-    const option = options.find(opt => opt.value === value);
-    setSelectedOption(option || null);
-  }, [value, options]);
+  // Find the selected option label
+  const selectedOption = options.find(option => option.value === value);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleOptionClick = (optionValue) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -33,75 +37,35 @@ const CustomDropdown = ({
     };
   }, []);
 
-  const handleOptionClick = (option) => {
-    setSelectedOption(option);
-    setIsOpen(false);
-    if (onChange) {
-      onChange(option.value);
-    }
-  };
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-
-  // Handle keyboard navigation
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      setIsOpen(false);
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggleDropdown();
-    } else if (e.key === 'ArrowDown' && isOpen) {
-      e.preventDefault();
-      const currentIndex = options.findIndex(opt => opt.value === selectedOption?.value);
-      const nextIndex = (currentIndex + 1) % options.length;
-      handleOptionClick(options[nextIndex]);
-    } else if (e.key === 'ArrowUp' && isOpen) {
-      e.preventDefault();
-      const currentIndex = options.findIndex(opt => opt.value === selectedOption?.value);
-      const prevIndex = (currentIndex - 1 + options.length) % options.length;
-      handleOptionClick(options[prevIndex]);
-    }
-  };
-
   return (
-    <div className="custom-dropdown-container">
-      {label && <label className="dropdown-label">{label}{required && <span className="required-mark">*</span>}</label>}
-      <div 
-        ref={dropdownRef}
-        className={`custom-dropdown ${isOpen ? 'open' : ''}`}
-        tabIndex="0"
-        onKeyDown={handleKeyDown}
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        role="combobox"
-      >
-        <div 
-          className="selected-option"
-          onClick={toggleDropdown}
-        >
-          <span>{selectedOption ? selectedOption.label : placeholder}</span>
-          <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
+      <div className="custom-dropdown-wrapper">
+        {label && <label className="dropdown-label">{label}</label>}
+        <div className="custom-dropdown-container" ref={dropdownRef}>
+          <div
+              className={`custom-dropdown ${isOpen ? 'open' : ''}`}
+              onClick={toggleDropdown}
+          >
+            <div className="selected-option">
+              {selectedOption ? selectedOption.label : placeholder}
+            </div>
+            <div className="dropdown-arrow">▼</div>
+          </div>
+
+          {isOpen && (
+              <div className="dropdown-options">
+                {options.map((option) => (
+                    <div
+                        key={option.value}
+                        className={`dropdown-option ${option.value === value ? 'selected' : ''}`}
+                        onClick={() => handleOptionClick(option.value)}
+                    >
+                      {option.label}
+                    </div>
+                ))}
+              </div>
+          )}
         </div>
-        
-        {isOpen && (
-          <ul className="options-list" role="listbox">
-            {options.map((option) => (
-              <li 
-                key={option.value} 
-                className={`option-item ${selectedOption?.value === option.value ? 'selected' : ''}`}
-                onClick={() => handleOptionClick(option)}
-                role="option"
-                aria-selected={selectedOption?.value === option.value}
-              >
-                {option.label}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
-    </div>
   );
 };
 

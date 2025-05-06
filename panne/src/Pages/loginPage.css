@@ -147,3 +147,40 @@
     font-weight: 500;
     border: 1px solid #e74c3c;
 }
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .login-page {
+        padding: 4rem 1rem 1rem;
+        gap: 1rem;
+    }
+
+    .login-left {
+        margin: 0 1rem;
+    }
+
+    .login-right img {
+        max-width: 100%;
+    }
+
+    .login-right h1 {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .login-page {
+        flex-direction: column;
+        margin:0 2rem;
+        align-items: center;
+    }
+
+    .login-left {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .login-right {
+        display: none; /* Hide the right side on mobile */
+    }
+}

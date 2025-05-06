@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import CustomDropdown from './CustomDropdown';
 import './NotesView.css';
+import CustomDropdown from './CustomDropdown';
 
 const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,12 +43,28 @@ const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
     }
   });
 
+  // Prepare notebook options for the custom dropdown
+  const notebookOptions = [
+    { value: 'all', label: 'All Notebooks' },
+    ...notebooks.map(notebook => ({
+      value: notebook.id,
+      label: notebook.name
+    }))
+  ];
+
+  // Prepare sort options for the custom dropdown
+  const sortOptions = [
+    { value: 'updatedAt', label: 'Last Updated' },
+    { value: 'createdAt', label: 'Date Created' },
+    { value: 'title', label: 'Title' }
+  ];
+
   return (
     <div className="notes-view">
       <div className="notes-header">
         <h2>All Notes</h2>
         <button className="create-note-btn" onClick={onCreateNote}>
-          Create New Note
+          +  Note
         </button>
       </div>
       
@@ -65,29 +81,19 @@ const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
         <div className="filter-options">
           <div className="filter-group">
             <CustomDropdown
-              label="Notebook:"
-              options={[
-                { value: 'all', label: 'All Notebooks' },
-                ...notebooks.map(notebook => ({
-                  value: notebook.id,
-                  label: notebook.name
-                }))
-              ]}
+              options={notebookOptions}
               value={selectedNotebook}
-              onChange={(value) => setSelectedNotebook(value)}
+              onChange={setSelectedNotebook}
+              label="Notebook:"
             />
           </div>
           
           <div className="filter-group">
             <CustomDropdown
-              label="Sort by:"
-              options={[
-                { value: 'updatedAt', label: 'Last Updated' },
-                { value: 'createdAt', label: 'Date Created' },
-                { value: 'title', label: 'Title' }
-              ]}
+              options={sortOptions}
               value={sortBy}
-              onChange={(value) => setSortBy(value)}
+              onChange={setSortBy}
+              label="Sort by:"
             />
           </div>
         </div>
@@ -96,32 +102,40 @@ const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
       <div className="notes-count">
         {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'} found
       </div>
-      
+
       <div className="notes-grid">
         {sortedNotes.length > 0 ? (
           sortedNotes.map(note => (
-            <div 
-              key={note.id} 
-              className="note-card"
-              onClick={() => onNoteClick(note)}
-            >
-              <h3>{note.title}</h3>
-              <div className="note-preview">
-                {note.content && typeof note.content === 'string' && note.content.includes('<') ? (
-                  <div dangerouslySetInnerHTML={{ 
-                    __html: note.content.substring(0, 150) + (note.content.length > 150 ? '...' : '') 
-                  }} />
-                ) : (
-                  <p>{note.content?.substring(0, 150)}{note.content?.length > 150 ? '...' : ''}</p>
-                )}
+              <div
+                  key={note.id}
+                  className="item-card note-card"
+                  onClick={() => onNoteClick(note)}
+              >
+                <h4>{note.title}</h4>
+
+                <div className="item-content">
+                  {note.content && typeof note.content === 'string' && note.content.includes('<') ? (
+                      <div
+                          dangerouslySetInnerHTML={{
+                            __html: note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '')
+                          }}
+                      />
+                  ) : (
+                      <p>
+                        {note.content?.substring(0, 100)}
+                        {note.content?.length > 100 ? '...' : ''}
+                      </p>
+                  )}
+                </div>
+
+                <div className="item-footer">
+    <span className="notebook-name">
+      {notebooks.find(nb => nb.id === note.notebookId)?.name || 'Uncategorized'}
+    </span>
+                  <span className="item-date">{formatDate(note.updatedAt)}</span>
+                </div>
               </div>
-              <div className="note-footer">
-                <span className="notebook-label">
-                  {notebooks.find(nb => nb.id === note.notebookId)?.name || 'Uncategorized'}
-                </span>
-                <span className="note-date">{formatDate(note.updatedAt)}</span>
-              </div>
-            </div>
+
           ))
         ) : (
           <div className="no-notes-message">

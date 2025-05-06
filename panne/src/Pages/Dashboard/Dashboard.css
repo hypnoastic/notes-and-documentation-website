@@ -2,27 +2,57 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.dashboard-visible {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .dashboard-container {
   display: flex;
   flex: 1;
   height: 100vh;
+  overflow: hidden; /* Prevent horizontal scrollbar */
 }
 
 .main-content {
   flex: 1;
   overflow-y: auto;
+  padding: 20px;
+  position: relative;
+  height: 100vh;
 }
 
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.animation-wrapper {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottom-text {
+  margin-top: auto;
+}
+
+.bottom-text h2 {
+  margin-bottom: 5px;
+}
+
+.bottom-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+}
+
+
+/* Keep the old loading style for fallback */
 .loading {
   display: flex;
   justify-content: center;
@@ -32,23 +62,74 @@
   color: #2dbe60;
 }
 
-.initial-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Ensure sidebar is always visible and has proper z-index */
+.sidebar {
+  z-index: 100;
+  top: 0;
   height: 100vh;
-  font-size: 1.5rem;
-  color: #2dbe60;
-  background-color: #faf6f3;
 }
 
-/* Responsive adjustments */
+/* Mobile action buttons */
+.mobile-action-buttons {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 999;
+}
+
+/* Buttons inherit their styling from this */
+.mobile-action-btn {
+  padding: 0.6rem 0.5rem;
+  background-color: #2dbe60;
+  color: white;
+  border: 1px solid black;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+  display: none;
+}
+
+/* Optional button-specific overrides */
+.mobile-action-btn.create-note {
+  background-color: #2dbe60;
+  color: white;
+}
+
+.mobile-action-btn.create-notebook {
+  background-color: white;
+  color: #333;
+}
+
+.mobile-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 1);
+}
 @media (max-width: 768px) {
   .dashboard-container {
     flex-direction: column;
   }
   
   .main-content {
-    height: calc(100vh - 250px);
+    height: calc(100vh - 70px);
+  }
+  
+  .mobile-action-btn {
+    display: flex;
+  }
+  
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 0;
+    z-index: 100;
   }
 }

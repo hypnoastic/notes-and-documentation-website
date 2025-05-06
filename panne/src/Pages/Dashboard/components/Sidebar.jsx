@@ -2,14 +2,17 @@ import React from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../../firebase';
 import './Sidebar.css';
+import homeIcon from '../../pageAssets/homeicon.png'
+import noteIcon from '../../pageAssets/notesicon.png'
+import notebookIcon from '../../pageAssets/notebookicon.png'
+import logoutIcon from '../../pageAssets/logouticon.png'
 
-const Sidebar = ({ 
-  user, 
-  activeTab, 
-  setActiveTab, 
-  onCreateNote, 
-  onCreateNotebook,
-  showEditor
+const Sidebar = ({
+  user,
+  activeTab,
+  setActiveTab,
+  onCreateNote,
+  onCreateNotebook
 }) => {
   const handleLogout = async () => {
     try {
@@ -19,24 +22,21 @@ const Sidebar = ({
     }
   };
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
   return (
-    <div className="sidebar">
-      {/* User Profile */}
-      <div className="sidebar-profile">
-        <div className="avatar">
-          {user?.displayName ? user.displayName[0].toUpperCase() : 'U'}
+      <div className="sidebar">
+        {/* User Profile */}
+        <div className="sidebar-profile">
+          <div className="avatar">
+            {user?.displayName ? user.displayName[0].toUpperCase() : 'U'}
+          </div>
+          <div className="user-info">
+            <h3>{user?.displayName || 'User'}</h3>
+            <p>{user?.email}</p>
+          </div>
         </div>
-        <div className="user-info">
-          <h3>{user?.displayName || 'User'}</h3>
-          <p>{user?.email}</p>
-        </div>
-      </div>
 
-      {/* Action Buttons */}
+
+  {/* Action Buttons */}
       <div className="sidebar-actions">
         <button className="action-btn create-note" onClick={onCreateNote}>
           Create Note
@@ -48,30 +48,34 @@ const Sidebar = ({
 
       {/* Navigation */}
       <div className="sidebar-nav">
-        <button 
+        <button
           className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => handleTabChange('home')}
+          onClick={() => setActiveTab('home')}
         >
-          <span className="nav-text">Home</span>
+          <div className="nav-text">
+            <img src={homeIcon} alt="Home icon" className="sidebar-icon" /><p>Home</p></div>
         </button>
-        <button 
+        <button
           className={`nav-item ${activeTab === 'notes' ? 'active' : ''}`}
-          onClick={() => handleTabChange('notes')}
+          onClick={() => setActiveTab('notes')}
         >
-          <span className="nav-text">Notes</span>
+          <div className="nav-text">
+            <img src={noteIcon} alt="notes icon" className="sidebar-icon" /><p>Notes</p></div>
         </button>
-        <button 
+        <button
           className={`nav-item ${activeTab === 'notebooks' ? 'active' : ''}`}
-          onClick={() => handleTabChange('notebooks')}
+          onClick={() => setActiveTab('notebooks')}
         >
-          <span className="nav-text">Notebooks</span>
+          <div className="nav-text">
+            <img src={notebookIcon} alt="notebook icon" className="sidebar-icon" /><p>Notebooks</p></div>
         </button>
       </div>
 
       {/* Logout Button */}
       <div className="sidebar-footer">
         <button className="logout-btn" onClick={handleLogout}>
-          <span className="nav-text">Logout</span>
+          <div className="nav-text">
+            <img src={logoutIcon} alt="logout icon" className="sidebar-icon" /><p>Logout</p></div>
         </button>
       </div>
     </div>

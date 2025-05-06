@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import './landingPage.css';
 import docs from './pageAssets/docs.webp';
 import classNotes from './pageAssets/class-notes.webp';
@@ -14,12 +15,14 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    const [menuOpen, setMenuOpen] = useState(false);
     
     const scrollToSection = (sectionId) => {
         const section = document.getElementById(sectionId);
         if (section) {
             section.scrollIntoView({ behavior: 'smooth' });
         }
+        setMenuOpen(false); // Close menu after clicking
     };
 
     const handleGetStarted = () => {
@@ -29,16 +32,15 @@ const LandingPage = () => {
     return (
         <div className="container">
             {/* Navbar */}
-
             <div className="navbar">
                 <div className="navbar-left">
                     <div className="logo">पन्ने</div>
-                    <ul className="nav-links">
+                    <ul className={`nav-links ${menuOpen ? 'active' : ''}`}>
                         <li onClick={() => scrollToSection('features')}>Features</li>
                         <li onClick={() => scrollToSection('about-us')}>About Us</li>
                     </ul>
                 </div>
-                <div className="nav-buttons">
+                <div className={`nav-buttons ${menuOpen ? 'active' : ''}`}>
                     <Link to="/login">
                         <button className="login-btn">Login</button>
                     </Link>
