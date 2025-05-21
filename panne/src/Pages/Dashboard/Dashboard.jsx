@@ -15,8 +15,6 @@ import {
 import './Dashboard.css';
 import Lottie from 'lottie-react';
 import loadingAnimation from '../pageAssets/loading.json';
-
-// Import components
 import Sidebar from './components/Sidebar';
 import RichTextEditor from './components/RichTextEditor';
 import CreateNotebookModal from './components/CreateNotebookModal';
@@ -39,18 +37,15 @@ const Dashboard = () => {
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
-  // Show toast notification
   const showToast = (message, type = 'success', duration = 3000) => {
     setToast({ message, type, duration });
   };
 
-  // Hide toast notification
   const hideToast = () => {
     setToast(null);
   };
 
   useEffect(() => {
-    // Set minimum loading time to 3 seconds for animation
     const minLoadingTime = setTimeout(() => {
       setShowLoadingAnimation(false);
     }, 3000);
@@ -59,10 +54,8 @@ const Dashboard = () => {
       if (currentUser) {
         setUser(currentUser);
 
-        // Fetch notebooks and notes directly from Firebase
         fetchUserData(currentUser.uid);
       } else {
-        // Redirect to login if not authenticated
         navigate('/login');
       }
       setLoading(false);
@@ -76,10 +69,7 @@ const Dashboard = () => {
 
   const fetchUserData = async (userId) => {
     try {
-      // Fetch notebooks and notes as subcollections under the user
       const userDocRef = doc(db, 'users', userId);
-
-      // Fetch notebooks
       const notebooksRef = collection(userDocRef, 'notebooks');
       const notebooksQuery = query(notebooksRef, orderBy('updatedAt', 'desc'));
       const notebooksSnapshot = await getDocs(notebooksQuery);
@@ -90,8 +80,6 @@ const Dashboard = () => {
         updatedAt: doc.data().updatedAt ? new Date(doc.data().updatedAt.toDate()) : new Date(),
       }));
       setNotebooks(fetchedNotebooks);
-
-      // Fetch notes
       const notesRef = collection(userDocRef, 'notes');
       const notesQuery = query(notesRef, orderBy('updatedAt', 'desc'));
       const notesSnapshot = await getDocs(notesQuery);
