@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../../firebase';
+import { storage, db } from '../../../firebase';
 import './RichTextEditor.css';
 import CustomDropdown from './CustomDropdown';
+import { doc, updateDoc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import VersionHistoryModal from './VersionHistoryModal';
 
 const RichTextEditor = ({
   note,
@@ -16,6 +18,11 @@ const RichTextEditor = ({
   const [notebookId, setNotebookId] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [lastSelectionRange, setLastSelectionRange] = useState(null);
+  const [hasLoadedContent, setHasLoadedContent] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [userId, setUserId] = useState(''); // You should set this from auth context
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -24,46 +31,100 @@ const RichTextEditor = ({
       setTitle(note.title);
       setContent(note.content || '');
       setNotebookId(note.notebookId || '');
+      setHasLoadedContent(false);
     } else if (selectedNotebook) {
       setNotebookId(selectedNotebook.id);
+      setHasLoadedContent(false);
     } else if (notebooks && notebooks.length > 0) {
       setNotebookId(notebooks[0].id);
+      setHasLoadedContent(false);
     }
   }, [note, selectedNotebook, notebooks]);
 
-  const handleSubmit = (e) => {
+  // Only set initial content on first load
+  useEffect(() => {
+    if (editorRef.current && content && !hasLoadedContent) {
+      editorRef.current.innerHTML = content;
+      setHasLoadedContent(true);
+    }
+  }, [content, hasLoadedContent]);
+
+  // Load current note content on mount or when notebook/note/user changes
+  useEffect(() => {
+    if (!userId || !notebookId || !note?.id) return;
+    const loadCurrent = async () => {
+      const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
+      const snap = await getDoc(currentRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setTitle(data.title || '');
+        setContent(data.content || '');
+      }
+    };
+    loadCurrent();
+  }, [userId, notebookId, note?.id]);
+
+  // Save: add version and update current
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
       alert('Please enter a title for your note');
       return;
     }
-
     if (!notebookId) {
       alert('Please select a notebook');
       return;
     }
-
-    // Get the HTML content from the contentEditable div
+    if (!userId || !note?.id) {
+      alert('User or note not set.');
+      return;
+    }
     const htmlContent = editorRef.current.innerHTML;
-
-    // Show saving status
     setSaveStatus('saving');
-
-    // Call the save function
-    onSave(title, htmlContent, notebookId);
-
-    // Show saved status for 1 second
-    setTimeout(() => {
-      setSaveStatus('saved');
+    try {
+      // Add version
+      const versionsRef = collection(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'versions');
+      await addDoc(versionsRef, {
+        content: htmlContent,
+        title,
+        notebookId,
+        timestamp: serverTimestamp(),
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString(),
+      });
+      // Update current
+      const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
+      await updateDoc(currentRef, {
+        content: htmlContent,
+        title,
+        notebookId,
+        updatedAt: serverTimestamp(),
+      });
+      onSave(title, htmlContent, notebookId);
       setTimeout(() => {
-        setSaveStatus('');
-      }, 1000);
-    }, 300);
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setSaveStatus('');
+        }, 1000);
+      }, 300);
+    } catch (err) {
+      alert('Failed to save note version.');
+      setSaveStatus('');
+    }
   };
 
   const formatDoc = (command, value = null) => {
     document.execCommand(command, false, value);
     editorRef.current.focus();
+  };
+
+  // Save selection range when user interacts with the editor
+  const saveSelectionRange = () => {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0 && editorRef.current.contains(selection.anchorNode)) {
+      const range = selection.getRangeAt(0);
+      setLastSelectionRange(range.cloneRange());
+    }
   };
 
   const handleImageUpload = async (e) => {
@@ -89,23 +150,53 @@ const RichTextEditor = ({
       // Get the download URL
       const downloadURL = await getDownloadURL(snapshot.ref);
 
-      // Insert the image at cursor position
+      // Insert the image at the last saved cursor position in the editor
+      const wrapper = document.createElement('span');
+      wrapper.className = 'editor-image-wrapper';
+      wrapper.contentEditable = 'false';
+
       const img = document.createElement('img');
       img.src = downloadURL;
       img.className = 'editor-image';
-      img.style.maxWidth = '100%';
-      img.alt = file.name.split('.')[0]; // Add alt text for accessibility
+      img.style.maxWidth = '600px';
+      img.alt = file.name.split('.')[0];
+      img.draggable = false;
 
+      const handle = document.createElement('span');
+      handle.className = 'editor-image-resize-handle';
+      handle.title = 'Resize image';
+      wrapper.appendChild(img);
+      wrapper.appendChild(handle);
+
+      // Restore selection before inserting
       const selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.insertNode(img);
-      } else {
-        editorRef.current.appendChild(img);
+      selection.removeAllRanges();
+      if (lastSelectionRange) {
+        selection.addRange(lastSelectionRange);
+      } else if (editorRef.current) {
+        // fallback: place at end
+        const range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+        selection.addRange(range);
       }
 
-      // Make images resizable
-      makeImageResizable(img);
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.collapse(false);
+        range.insertNode(wrapper);
+        // Move cursor after image
+        range.setStartAfter(wrapper);
+        range.setEndAfter(wrapper);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        editorRef.current.appendChild(wrapper);
+      }
+
+      makeImageResizable(wrapper, img, handle);
+      // FIX: Update content state after inserting image
+      setContent(editorRef.current.innerHTML);
 
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -115,36 +206,28 @@ const RichTextEditor = ({
     }
   };
 
-  const makeImageResizable = (img) => {
-    img.style.cursor = 'move';
+  // Replace makeImageResizable with new version
+  const makeImageResizable = (wrapper, img, handle) => {
+    let startX, startWidth, aspectRatio;
 
-    img.addEventListener('mousedown', function(e) {
-      // Prevent default to avoid text selection
+    handle.addEventListener('mousedown', function(e) {
       e.preventDefault();
+      e.stopPropagation();
+      startX = e.clientX;
+      startWidth = img.offsetWidth;
+      aspectRatio = img.naturalHeight / img.naturalWidth;
 
-      const startX = e.clientX;
-      const startWidth = img.clientWidth;
-      const startHeight = img.clientHeight;
-
-      // Function to handle mouse movement
-      function handleMouseMove(e) {
-        const newWidth = startWidth + (e.clientX - startX);
-        const aspectRatio = startHeight / startWidth;
-        const newHeight = newWidth * aspectRatio;
-
-        img.style.width = `${newWidth}px`;
-        img.style.height = `${newHeight}px`;
+      function onMouseMove(e) {
+        const newWidth = Math.max(40, startWidth + (e.clientX - startX));
+        img.style.width = newWidth + 'px';
+        img.style.height = (newWidth * aspectRatio) + 'px';
       }
-
-      // Function to handle mouse up
-      function handleMouseUp() {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+      function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
       }
-
-      // Add event listeners for mousemove and mouseup
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     });
   };
 
@@ -158,8 +241,22 @@ const RichTextEditor = ({
   // Make existing images resizable when the editor loads
   useEffect(() => {
     if (editorRef.current) {
-      const images = editorRef.current.querySelectorAll('img');
-      images.forEach(img => makeImageResizable(img));
+      const images = editorRef.current.querySelectorAll('img.editor-image');
+      images.forEach(img => {
+        if (!img.parentElement.classList.contains('editor-image-wrapper')) {
+          const wrapper = document.createElement('span');
+          wrapper.className = 'editor-image-wrapper';
+          wrapper.contentEditable = 'false';
+          img.parentNode.insertBefore(wrapper, img);
+          wrapper.appendChild(img);
+          // Add handle
+          const handle = document.createElement('span');
+          handle.className = 'editor-image-resize-handle';
+          handle.title = 'Resize image';
+          wrapper.appendChild(handle);
+          makeImageResizable(wrapper, img, handle);
+        }
+      });
     }
   }, [content]);
 
@@ -168,6 +265,50 @@ const RichTextEditor = ({
     value: notebook.id,
     label: notebook.name
   }));
+
+  // Cancel: reload from current
+  const handleCancel = async () => {
+    if (!userId || !notebookId || !note?.id) return;
+    const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
+    const snap = await getDoc(currentRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      setTitle(data.title || '');
+      setContent(data.content || '');
+    }
+  };
+
+  // Fetch version history for this note
+  const fetchVersions = async () => {
+    if (!userId || !notebookId || !note?.id) return;
+    const versionsRef = collection(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'versions');
+    const q = query(versionsRef, orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
+    const versionList = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+    setVersions(versionList);
+  };
+
+  // Revert logic
+  const handleRevert = async (version) => {
+    if (!userId || !notebookId || !note?.id || !version) return;
+    try {
+      const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
+      await updateDoc(currentRef, {
+        content: version.content,
+        title: version.title,
+        notebookId: version.notebookId,
+        updatedAt: serverTimestamp(),
+      });
+      setTitle(version.title);
+      setContent(version.content);
+      setShowHistory(false);
+    } catch {
+      alert('Failed to revert to selected version.');
+    }
+  };
 
   return (
     <div className="rich-text-editor">
@@ -268,13 +409,31 @@ const RichTextEditor = ({
             ref={editorRef}
             className="editor-content"
             contentEditable
-            dangerouslySetInnerHTML={{ __html: content }}
+            suppressContentEditableWarning={true}
+            onInput={e => {
+              const html = e.currentTarget.innerHTML;
+              if (html !== content) {
+                setContent(html);
+              }
+            }}
             onPaste={handlePaste}
+            onMouseUp={saveSelectionRange}
+            onKeyUp={saveSelectionRange}
+            onBlur={saveSelectionRange}
+            onFocus={() => {
+              if (!hasLoadedContent && content) {
+                editorRef.current.innerHTML = content;
+                setHasLoadedContent(true);
+              }
+            }}
           ></div>
         </div>
 
         <div className="editor-actions">
-          <button type="button" className="cancel-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="cancel-btn" onClick={handleCancel}>Cancel</button>
+          <button type="button" className="history-btn" onClick={async () => { await fetchVersions(); setShowHistory(true); }}>
+            Previous Saves
+          </button>
           <button type="submit" className={`save-btn ${saveStatus ? saveStatus : ''}`} disabled={uploading}>
             {uploading ? 'Uploading...' :
              saveStatus === 'saving' ? 'Saving...' :
@@ -282,6 +441,12 @@ const RichTextEditor = ({
              'Save Note'}
           </button>
         </div>
+        <VersionHistoryModal
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+          versions={versions}
+          onRevert={handleRevert}
+        />
       </form>
     </div>
   );

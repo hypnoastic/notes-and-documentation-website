@@ -168,17 +168,47 @@
   border-color: #2dbe60;
 }
 
+.editor-image-wrapper {
+  display: inline-block;
+  position: relative;
+  vertical-align: bottom;
+}
+
 .editor-image {
-  max-width: 100%;
+  max-width: 600px;
+  width: auto;
   height: auto;
   margin: 0.5rem 0;
   cursor: pointer;
   border: 2px solid transparent;
   transition: all 0.2s ease;
+  display: inline-block;
 }
 
-.editor-image:hover {
-  border-color: #2dbe60;
+.editor-image-wrapper .editor-image-resize-handle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border: 2px solid #2dbe60;
+  border-radius: 50%;
+  cursor: se-resize;
+  z-index: 2;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-image-wrapper .editor-image-resize-handle::after {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  background: #2dbe60;
+  border-radius: 50%;
 }
 
 .editor-actions {

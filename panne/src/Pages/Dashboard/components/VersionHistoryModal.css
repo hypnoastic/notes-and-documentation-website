@@ -1,0 +1,93 @@
+.version-history-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.version-history-modal {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  width: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+.version-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1rem;
+}
+.version-history-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.version-history-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+.version-history-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.version-history-list li {
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+}
+.version-history-list li.selected {
+  background: #e6f7ee;
+}
+.version-date {
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+.version-time {
+  margin-left: 1rem;
+  color: #888;
+  font-size: 0.95em;
+}
+.version-history-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+.revert-btn {
+  background: #2dbe60;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.revert-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: #888;
+}
+.close-btn:hover {
+  color: #e74c3c;
+}
+.empty {
+  color: #888;
+  text-align: center;
+  padding: 2rem 0;
+}
