@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, db } from '../../../firebase';
+import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import './RichTextEditor.css';
 import CustomDropdown from './CustomDropdown';
-import { doc, updateDoc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import VersionHistoryModal from './VersionHistoryModal';
 
 const RichTextEditor = ({
@@ -11,7 +11,8 @@ const RichTextEditor = ({
   selectedNotebook,
   notebooks,
   onSave,
-  onClose
+  onClose,
+  user
 }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -20,9 +21,8 @@ const RichTextEditor = ({
   const [saveStatus, setSaveStatus] = useState('');
   const [lastSelectionRange, setLastSelectionRange] = useState(null);
   const [hasLoadedContent, setHasLoadedContent] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [versions, setVersions] = useState([]);
-  const [userId, setUserId] = useState(''); // You should set this from auth context
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -49,22 +49,6 @@ const RichTextEditor = ({
     }
   }, [content, hasLoadedContent]);
 
-  // Load current note content on mount or when notebook/note/user changes
-  useEffect(() => {
-    if (!userId || !notebookId || !note?.id) return;
-    const loadCurrent = async () => {
-      const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
-      const snap = await getDoc(currentRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        setTitle(data.title || '');
-        setContent(data.content || '');
-      }
-    };
-    loadCurrent();
-  }, [userId, notebookId, note?.id]);
-
-  // Save: add version and update current
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -75,40 +59,52 @@ const RichTextEditor = ({
       alert('Please select a notebook');
       return;
     }
-    if (!userId || !note?.id) {
-      alert('User or note not set.');
-      return;
-    }
+
+    // Always get the latest HTML from the DOM
     const htmlContent = editorRef.current.innerHTML;
     setSaveStatus('saving');
+
     try {
-      // Add version
-      const versionsRef = collection(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'versions');
+      // Create the note document if it doesn't exist
+      let noteId = note?.id;
+      if (!noteId) {
+        const userNotesRef = collection(db, 'users', user.uid, 'notes');
+        const newNoteRef = await addDoc(userNotesRef, {
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          notebookId,
+          notebookName: notebooks.find(nb => nb.id === notebookId)?.name || ''
+        });
+        noteId = newNoteRef.id;
+      }
+
+      // Update the current version
+      const currentRef = doc(db, 'users', user.uid, 'notes', noteId, 'current', 'latest');
+      await setDoc(currentRef, {
+        title,
+        content: htmlContent,
+        updatedAt: serverTimestamp()
+      });
+
+      // Add to version history
+      const versionsRef = collection(db, 'users', user.uid, 'notes', noteId, 'versions');
       await addDoc(versionsRef, {
-        content: htmlContent,
         title,
-        notebookId,
-        timestamp: serverTimestamp(),
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString(),
-      });
-      // Update current
-      const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
-      await updateDoc(currentRef, {
         content: htmlContent,
-        title,
-        notebookId,
-        updatedAt: serverTimestamp(),
+        editedBy: user.email,
+        timestamp: serverTimestamp()
       });
+
+      // Call the parent's onSave to update UI
       onSave(title, htmlContent, notebookId);
+
+      setSaveStatus('saved');
       setTimeout(() => {
-        setSaveStatus('saved');
-        setTimeout(() => {
-          setSaveStatus('');
-        }, 1000);
-      }, 300);
-    } catch (err) {
-      alert('Failed to save note version.');
+        setSaveStatus('');
+      }, 1000);
+    } catch (error) {
+      console.error('Error saving note:', error);
+      alert('Failed to save note. Please try again.');
       setSaveStatus('');
     }
   };
@@ -158,7 +154,7 @@ const RichTextEditor = ({
       const img = document.createElement('img');
       img.src = downloadURL;
       img.className = 'editor-image';
-      img.style.maxWidth = '600px';
+      img.style.maxWidth = '200px';
       img.alt = file.name.split('.')[0];
       img.draggable = false;
 
@@ -266,48 +262,68 @@ const RichTextEditor = ({
     label: notebook.name
   }));
 
-  // Cancel: reload from current
-  const handleCancel = async () => {
-    if (!userId || !notebookId || !note?.id) return;
-    const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
-    const snap = await getDoc(currentRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      setTitle(data.title || '');
-      setContent(data.content || '');
-    }
-  };
-
-  // Fetch version history for this note
-  const fetchVersions = async () => {
-    if (!userId || !notebookId || !note?.id) return;
-    const versionsRef = collection(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'versions');
-    const q = query(versionsRef, orderBy('timestamp', 'desc'));
-    const snapshot = await getDocs(q);
-    const versionList = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
-    setVersions(versionList);
-  };
-
-  // Revert logic
-  const handleRevert = async (version) => {
-    if (!userId || !notebookId || !note?.id || !version) return;
+  const handleRevertToVersion = async (version) => {
     try {
-      const currentRef = doc(db, 'users', userId, 'notebooks', notebookId, 'notes', note.id, 'current');
-      await updateDoc(currentRef, {
-        content: version.content,
+      // Update the current version with the selected version's content
+      const currentRef = doc(db, 'users', user.uid, 'notes', note.id, 'current', 'latest');
+      await setDoc(currentRef, {
         title: version.title,
-        notebookId: version.notebookId,
-        updatedAt: serverTimestamp(),
+        content: version.content,
+        updatedAt: serverTimestamp()
       });
+
+      // Add this reversion as a new version
+      const versionsRef = collection(db, 'users', user.uid, 'notes', note.id, 'versions');
+      await addDoc(versionsRef, {
+        title: version.title,
+        content: version.content,
+        editedBy: user.email,
+        timestamp: serverTimestamp(),
+        isReversion: true,
+        revertedFromVersion: version.id
+      });
+
+      // Update the editor content
       setTitle(version.title);
       setContent(version.content);
-      setShowHistory(false);
-    } catch {
-      alert('Failed to revert to selected version.');
+      editorRef.current.innerHTML = version.content;
+      setShowVersionHistory(false);
+      
+      // Show success message
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus(''), 1000);
+    } catch (error) {
+      console.error('Error reverting to version:', error);
+      alert('Failed to revert to selected version. Please try again.');
     }
+  };
+
+  const handleCancelEdit = async () => {
+    if (!note?.id) {
+      onClose();
+      return;
+    }
+
+    try {
+      // Reload the current version
+      const currentRef = doc(db, 'users', user.uid, 'notes', note.id, 'current', 'latest');
+      const currentSnap = await setDoc(currentRef);
+      
+      if (currentSnap.exists()) {
+        const currentData = currentSnap.data();
+        setTitle(currentData.title);
+        setContent(currentData.content);
+        editorRef.current.innerHTML = currentData.content;
+      }
+    } catch (error) {
+      console.error('Error reloading current version:', error);
+      alert('Failed to reload current version. Please try again.');
+    }
+  };
+
+  const getShareableLink = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/shared-note?userId=${user.uid}&noteId=${note.id}`;
   };
 
   return (
@@ -352,14 +368,12 @@ const RichTextEditor = ({
             </button>
           </div>
           <div>
-          <select className="font-size-edit" onChange={(e) => formatDoc('fontSize', e.target.value)}>
-
-            <option value="">Font Size</option>
-            <option value="7">Heading</option>
-            <option value="6">Sub Heading</option>
-            <option value="3">Body</option>
-
-          </select>
+            <select className="font-size-edit" onChange={(e) => formatDoc('fontSize', e.target.value)}>
+              <option value="">Font Size</option>
+              <option value="7">Heading</option>
+              <option value="6">Sub Heading</option>
+              <option value="3">Body</option>
+            </select>
           </div>
           <div className="toolbar-group">
             <input
@@ -430,24 +444,76 @@ const RichTextEditor = ({
         </div>
 
         <div className="editor-actions">
-          <button type="button" className="cancel-btn" onClick={handleCancel}>Cancel</button>
-          <button type="button" className="history-btn" onClick={async () => { await fetchVersions(); setShowHistory(true); }}>
-            Previous Saves
-          </button>
-          <button type="submit" className={`save-btn ${saveStatus ? saveStatus : ''}`} disabled={uploading}>
-            {uploading ? 'Uploading...' :
-             saveStatus === 'saving' ? 'Saving...' :
-             saveStatus === 'saved' ? 'Saved!' :
-             'Save Note'}
-          </button>
+          <div className="editor-action-left">
+            {note && (
+              <>
+                <button 
+                  type="button" 
+                  className="share-btn"
+                  onClick={() => setShowShareModal(true)}
+                >
+                  Share
+                </button>
+                <button
+                  type="button"
+                  className="history-btn"
+                  onClick={() => setShowVersionHistory(true)}
+                >
+                  Previous Saves
+                </button>
+              </>
+            )}
+          </div>
+          <div className="editor-action-right">
+            <button type="button" className="cancel-btn" onClick={handleCancelEdit}>
+              Cancel
+            </button>
+            <button type="submit" className={`save-btn ${saveStatus ? saveStatus : ''}`} disabled={uploading}>
+              {uploading ? 'Uploading...' :
+               saveStatus === 'saving' ? 'Saving...' :
+               saveStatus === 'saved' ? 'Saved!' :
+               'Save Note'}
+            </button>
+          </div>
         </div>
-        <VersionHistoryModal
-          isOpen={showHistory}
-          onClose={() => setShowHistory(false)}
-          versions={versions}
-          onRevert={handleRevert}
-        />
       </form>
+
+      {showVersionHistory && (
+        <VersionHistoryModal
+          note={note}
+          userId={user.uid}
+          onClose={() => setShowVersionHistory(false)}
+          onRevert={handleRevertToVersion}
+        />
+      )}
+
+      {showShareModal && (
+        <div className="share-modal">
+          <div className="share-modal-content">
+            <h3>Share Note</h3>
+            <p>Anyone with this link can view this note:</p>
+            <div className="share-link-container">
+              <input
+                type="text"
+                value={getShareableLink()}
+                readOnly
+                onClick={e => e.target.select()}
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(getShareableLink());
+                  alert('Link copied to clipboard!');
+                }}
+              >
+                Copy
+              </button>
+            </div>
+            <button className="share-modal-close-btn" onClick={() => setShowShareModal(false)}>
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

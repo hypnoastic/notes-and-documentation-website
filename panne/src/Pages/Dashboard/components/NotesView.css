@@ -107,6 +107,28 @@
   gap: 1.5rem;
 }
 
+.note-card {
+  position: relative;
+}
+
+.delete-note-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  line-height: 1;
+  z-index: 10;
+}
+
+.delete-note-btn:hover {
+  color: #e74c3c;
+}
+
 
 .note-card h3 {
   margin: 0 0 0.75rem 0;

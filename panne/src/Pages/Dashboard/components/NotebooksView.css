@@ -69,11 +69,30 @@
 }
 
 .notebook-item {
+  position: relative;
   background-color: #ffffff;
   border: 1px solid black;
   border-radius: 10px;
   overflow: hidden;
   transition: all 0.2s ease;
+}
+
+.delete-notebook-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  line-height: 1;
+  z-index: 10;
+}
+
+.delete-notebook-btn:hover {
+  color: #e74c3c;
 }
 
 .notebook-item:hover {

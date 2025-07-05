@@ -7,8 +7,10 @@ import {
   query,
   orderBy,
   getDocs,
+  getDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -80,15 +82,26 @@ const Dashboard = () => {
         updatedAt: doc.data().updatedAt ? new Date(doc.data().updatedAt.toDate()) : new Date(),
       }));
       setNotebooks(fetchedNotebooks);
+
+      // Fetch notes
       const notesRef = collection(userDocRef, 'notes');
       const notesQuery = query(notesRef, orderBy('updatedAt', 'desc'));
       const notesSnapshot = await getDocs(notesQuery);
-      const fetchedNotes = notesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt ? new Date(doc.data().createdAt.toDate()) : new Date(),
-        updatedAt: doc.data().updatedAt ? new Date(doc.data().updatedAt.toDate()) : new Date(),
+      
+      // For each note, fetch its current content
+      const fetchedNotes = await Promise.all(notesSnapshot.docs.map(async (noteDoc) => {
+        const currentRef = doc(notesRef, noteDoc.id, 'current', 'latest');
+        const currentSnap = await getDoc(currentRef);
+        
+        return {
+          id: noteDoc.id,
+          ...noteDoc.data(),
+          ...currentSnap.data(),
+          createdAt: noteDoc.data().createdAt ? new Date(noteDoc.data().createdAt.toDate()) : new Date(),
+          updatedAt: noteDoc.data().updatedAt ? new Date(noteDoc.data().updatedAt.toDate()) : new Date(),
+        };
       }));
+      
       setNotes(fetchedNotes);
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -207,6 +220,43 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteNote = async (noteId) => {
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const noteRef = doc(userDocRef, 'notes', noteId);
+      await deleteDoc(noteRef);
+      
+      setNotes(notes.filter(note => note.id !== noteId));
+      showToast('Note deleted successfully!', 'success');
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      showToast('Failed to delete note. Please try again.', 'error');
+    }
+  };
+
+  const handleDeleteNotebook = async (notebookId) => {
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      
+      // Delete all notes in the notebook
+      const notesToDelete = notes.filter(note => note.notebookId === notebookId);
+      await Promise.all(notesToDelete.map(note => 
+        deleteDoc(doc(userDocRef, 'notes', note.id))
+      ));
+      
+      // Delete the notebook
+      const notebookRef = doc(userDocRef, 'notebooks', notebookId);
+      await deleteDoc(notebookRef);
+      
+      setNotebooks(notebooks.filter(notebook => notebook.id !== notebookId));
+      setNotes(notes.filter(note => note.notebookId !== notebookId));
+      showToast('Notebook and all its notes deleted successfully!', 'success');
+    } catch (error) {
+      console.error('Error deleting notebook:', error);
+      showToast('Failed to delete notebook. Please try again.', 'error');
+    }
+  };
+
   const handleCloseEditor = () => {
     setShowEditor(false);
   };
@@ -273,6 +323,7 @@ const Dashboard = () => {
               notebooks={notebooks}
               onSave={handleSaveNote}
               onClose={handleCloseEditor}
+              user={user}
             />
           ) : (
             <>
@@ -296,6 +347,7 @@ const Dashboard = () => {
                   notebooks={notebooks}
                   onNoteClick={handleEditNote}
                   onCreateNote={handleCreateNote}
+                  onDeleteNote={handleDeleteNote}
                 />
               )}
 
@@ -306,6 +358,7 @@ const Dashboard = () => {
                   onNotebookClick={(notebook) => setSelectedNotebook(notebook)}
                   onNoteClick={handleEditNote}
                   onCreateNotebook={handleCreateNotebook}
+                  onDeleteNotebook={handleDeleteNotebook}
                 />
               )}
             </>

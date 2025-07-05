@@ -5,7 +5,8 @@ const NotebooksView = ({
   notebooks, 
   notes,
   onNoteClick, 
-  onCreateNotebook 
+  onCreateNotebook,
+  onDeleteNotebook 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedNotebook, setExpandedNotebook] = useState(null);
@@ -76,6 +77,16 @@ const NotebooksView = ({
             
             return (
               <div key={notebook.id} className="notebook-item">
+                <button 
+                  className="delete-notebook-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteNotebook(notebook.id);
+                  }}
+                  title="Delete notebook"
+                >
+                  ×
+                </button>
                 <div 
                   className="notebook-header"
                   onClick={() => toggleNotebook(notebook.id)}

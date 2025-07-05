@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './NotesView.css';
 import CustomDropdown from './CustomDropdown';
 
-const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
+const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote, onDeleteNote }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotebook, setSelectedNotebook] = useState('all');
   const [sortBy, setSortBy] = useState('updatedAt');
@@ -111,6 +111,16 @@ const NotesView = ({ notes, notebooks, onNoteClick, onCreateNote }) => {
                   className="item-card note-card"
                   onClick={() => onNoteClick(note)}
               >
+                <button 
+                  className="delete-note-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteNote(note.id);
+                  }}
+                  title="Delete note"
+                >
+                  ×
+                </button>
                 <h4>{note.title}</h4>
 
                 <div className="item-content">

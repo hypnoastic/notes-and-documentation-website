@@ -6,6 +6,7 @@ import LandingPage from './Pages/landingPage.jsx';
 import Login from './Pages/loginPage.jsx';
 import Signup from './Pages/signupPage.jsx';
 import Dashboard from './Pages/Dashboard/Dashboard.jsx';
+import ReadOnlyView from './Pages/read-only.jsx';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -41,6 +42,7 @@ function App() {
                         </ProtectedRoute>
                     } 
                 />
+                <Route path="/shared-note" element={<ReadOnlyView />} />
             </Routes>
         </Router>
     );
