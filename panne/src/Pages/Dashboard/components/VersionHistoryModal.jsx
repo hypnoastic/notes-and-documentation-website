@@ -98,6 +98,17 @@ const VersionHistoryModal = ({ note, userId, onClose, onRevert }) => {
             )}
           </div>
         </div>
+        
+        {selectedVersion && (
+          <div className="mobile-revert-footer">
+            <button
+              className="mobile-revert-btn"
+              onClick={() => onRevert(selectedVersion)}
+            >
+              Revert to This Version
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

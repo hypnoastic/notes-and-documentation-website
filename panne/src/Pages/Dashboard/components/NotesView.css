@@ -188,6 +188,7 @@
 @media (max-width: 768px) {
   .notes-view {
     margin-left: 60px;
+    margin-top: 40px;
   }
   .filter-options{
     display: none;

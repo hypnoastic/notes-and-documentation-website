@@ -237,6 +237,7 @@
 @media (max-width: 768px) {
   .notebooks-view {
     margin-left: 60px;
+    margin-top: 40px;
   }
   .notebooks-header {
     align-items: flex-start;

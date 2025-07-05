@@ -2,7 +2,8 @@
   width: 250px;
   background-color: #faf6f3;
   border-right: 1px solid black;
-  height: auto;
+  height: 100vh;
+  min-height: 700px;
   display: flex;
   flex-direction: column;
   padding: 1.5rem 1rem;
@@ -164,6 +165,7 @@
   border: none;
   text-align: left;
   transition: background-color 0.2s ease;
+  margin-bottom: 50px;
 }
 
 .logout-btn:hover {

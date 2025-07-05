@@ -272,7 +272,10 @@ const Dashboard = () => {
   };
 
   const getRecentNotebooks = () => {
-    return notebooks.slice(0, 3);
+    return notebooks.slice(0, 3).map(notebook => ({
+      ...notebook,
+      noteCount: notes.filter(note => note.notebookId === notebook.id).length
+    }));
   };
 
   if (loading || showLoadingAnimation) {

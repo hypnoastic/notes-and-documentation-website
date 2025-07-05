@@ -23,6 +23,7 @@ const RichTextEditor = ({
   const [hasLoadedContent, setHasLoadedContent] = useState(false);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [copyButtonText, setCopyButtonText] = useState('Copy');
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -502,10 +503,11 @@ const RichTextEditor = ({
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(getShareableLink());
-                  alert('Link copied to clipboard!');
+                  setCopyButtonText('Copied!');
+                  setTimeout(() => setCopyButtonText('Copy'), 2000);
                 }}
               >
-                Copy
+                {copyButtonText}
               </button>
             </div>
             <button className="share-modal-close-btn" onClick={() => setShowShareModal(false)}>
