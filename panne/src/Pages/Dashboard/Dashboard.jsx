@@ -154,69 +154,35 @@ const Dashboard = () => {
     setShowEditor(true);
   };
 
-  const handleSaveNote = async (title, content, notebookId) => {
-    try {
-      const notebook = notebooks.find((nb) => nb.id === notebookId);
-      if (!notebook) {
-        showToast('Please select a valid notebook', 'error');
-        return;
-      }
+  const handleSaveNote = (title, content, notebookId) => {
+    const notebook = notebooks.find((nb) => nb.id === notebookId);
+    if (!notebook) {
+      showToast('Please select a valid notebook', 'error');
+      return;
+    }
 
-      const userDocRef = doc(db, 'users', user.uid);
-      const notesRef = collection(userDocRef, 'notes');
-
-      if (selectedNote) {
-        // Update existing note
-        const noteRef = doc(notesRef, selectedNote.id);
-        await updateDoc(noteRef, {
-          title,
-          content,
-          notebookId,
-          notebookName: notebook.name,
-          updatedAt: serverTimestamp(),
-        });
-
-        const updatedNotes = notes.map((note) =>
-          note.id === selectedNote.id
-            ? {
-                ...note,
-                title,
-                content,
-                notebookId,
-                notebookName: notebook.name,
-                updatedAt: new Date(),
-              }
-            : note
-        );
-        setNotes(updatedNotes);
-        showToast('Note updated successfully!', 'success');
-      } else {
-        // Create new note
-        const newNote = {
-          title,
-          content,
-          userId: user.uid,
-          notebookId,
-          notebookName: notebook.name,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-
-        const docRef = await addDoc(notesRef, newNote);
-
-        const newNoteWithId = {
-          id: docRef.id,
-          ...newNote,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        setNotes([newNoteWithId, ...notes]);
-        showToast('Note created successfully!', 'success');
-      }
-    } catch (error) {
-      console.error('Error saving note:', error);
-      showToast('Failed to save note. Please try again.', 'error');
+    if (selectedNote) {
+      // Update existing note in local state
+      const updatedNotes = notes.map((note) =>
+        note.id === selectedNote.id
+          ? {
+              ...note,
+              title,
+              content,
+              notebookId,
+              notebookName: notebook.name,
+              updatedAt: new Date(),
+            }
+          : note
+      );
+      setNotes(updatedNotes);
+      showToast('Note updated successfully!', 'success');
+    } else {
+      // This shouldn't happen since RichTextEditor handles new note creation
+      // But keeping for safety - just show success message
+      showToast('Note created successfully!', 'success');
+      // Refresh data to get the new note
+      fetchUserData(user.uid);
     }
   };
 
