@@ -71,12 +71,24 @@ const RichTextEditor = ({
       if (!noteId) {
         const userNotesRef = collection(db, 'users', user.uid, 'notes');
         const newNoteRef = await addDoc(userNotesRef, {
+          title,
+          content: htmlContent,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           notebookId,
           notebookName: notebooks.find(nb => nb.id === notebookId)?.name || ''
         });
         noteId = newNoteRef.id;
+      } else {
+        // Update existing note document
+        const noteRef = doc(db, 'users', user.uid, 'notes', noteId);
+        await setDoc(noteRef, {
+          title,
+          content: htmlContent,
+          updatedAt: serverTimestamp(),
+          notebookId,
+          notebookName: notebooks.find(nb => nb.id === notebookId)?.name || ''
+        }, { merge: true });
       }
 
       // Update the current version

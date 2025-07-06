@@ -22,7 +22,21 @@ const ReadOnlyView = () => {
       }
 
       try {
-        const noteRef = doc(db, 'users', userId, 'notes', noteId, 'current', 'latest');
+        // Try to get from current/latest first
+        const currentRef = doc(db, 'users', userId, 'notes', noteId, 'current', 'latest');
+        const currentSnap = await getDoc(currentRef);
+
+        if (currentSnap.exists()) {
+          setNote({
+            id: noteId,
+            ...currentSnap.data()
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Fallback to main note document
+        const noteRef = doc(db, 'users', userId, 'notes', noteId);
         const noteSnap = await getDoc(noteRef);
 
         if (!noteSnap.exists()) {
